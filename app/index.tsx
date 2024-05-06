@@ -46,7 +46,7 @@ const ScreenStart = () => {
         </Text>
         <BaseButton
           title={"Get Started"}
-          onPress={() => link.push(`/scr/example`)}
+          onPress={() => link.push(`/scr/register`)}
         />
       </View>
     </ScrollView>
