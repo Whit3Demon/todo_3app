@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { TextInput, TouchableOpacity, View } from "react-native";
+import { TextInput, TouchableOpacity, View, Text } from "react-native";
 
 import { Feather } from "@expo/vector-icons";
 
@@ -8,7 +8,7 @@ interface BaseinputProps {
   value?: string;
   onChangeText?: (text: string) => void;
   secureTextEntry?: boolean;
-  error?: boolean;
+  error?: boolean | string;
   passwordEye?: boolean;
 }
 
@@ -41,6 +41,18 @@ const BaseInput = ({
         }}
         placeholderTextColor={"rgba(0,0,0,0.8)"}
       />
+      {error && (
+        <Text
+          style={{
+            zIndex: 999,
+            position: "absolute",
+            left: 145,
+            fontSize: 10,
+          }}
+        >
+          {error}
+        </Text>
+      )}
       {passwordEye && (
         <TouchableOpacity
           onPress={() => setSecurityText(!secureText)}

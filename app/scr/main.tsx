@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
-  ScrollView,
+  FlatList,
+  Image,
   Text,
   TextInput,
   TouchableOpacity,
@@ -9,14 +10,22 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import DoubleCircles from "../../components/DoubleCircles";
-import { Image } from "expo-image";
-import { Entypo, Ionicons } from "@expo/vector-icons";
-import { Fontisto } from "@expo/vector-icons";
+import { Entypo, EvilIcons, Ionicons } from "@expo/vector-icons";
+import {
+  GestureHandlerRootView,
+  Swipeable,
+} from "react-native-gesture-handler";
+
+import * as ImagePicker from "expo-image-picker";
+
+import { Clock, ClockThemes } from "react-native-clocks";
+
+type TodoListType = {
+  isActive: boolean;
+  value: string;
+};
 
 const SecondScr = () => {
-  const safe = useSafeAreaInsets();
-  const link = useRouter();
-
   const getCurrentTimeOfDay = (): string => {
     const currentTime = new Date().getHours();
     if (currentTime >= 5 && currentTime < 12) {
@@ -30,23 +39,123 @@ const SecondScr = () => {
     }
   };
 
+  const [image, setImage] = useState<string | null>(null);
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (result.assets) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const [expressions, setExpressions] = useState<TodoListType[]>([]);
+  const [currentExpression, setCurrentExpression] = useState("");
+
+  const handleAddExpression = () => {
+    currentExpression.length > 0 &&
+      setExpressions([
+        ...expressions,
+        { isActive: false, value: currentExpression },
+      ]);
+    setCurrentExpression("");
+  };
+
+  const handleToggleStatusExpressions = (index: number) => {
+    const newExpressions = [...expressions];
+    newExpressions[index].isActive = !newExpressions[index].isActive;
+    setExpressions(newExpressions);
+  };
+
+  const removeExpression = (index: number) => {
+    const newExpressions = [...expressions];
+    newExpressions.splice(index, 1);
+    setExpressions(newExpressions);
+  };
+
+  const leftSwipe = (index: number) => {
+    return (
+      <TouchableOpacity
+        style={{ width: 30, height: 20 }}
+        onPress={() => removeExpression(index)}
+      >
+        <EvilIcons name="trash" size={20} color="red" />
+      </TouchableOpacity>
+    );
+  };
+
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: TodoListType;
+    index: number;
+  }) => (
+    <Swipeable renderRightActions={() => leftSwipe(index)}>
+      <TouchableOpacity
+        key={index}
+        style={{ flexDirection: "row", alignItems: "center", gap: 9 }}
+        onPress={() => handleToggleStatusExpressions(index)}
+      >
+        <View
+          style={{
+            width: 17,
+            aspectRatio: 1,
+            borderWidth: 2,
+            borderColor: "black",
+            backgroundColor: item.isActive ? "#50C2C9" : "white",
+          }}
+        />
+        <Text
+          style={{
+            color: "rgba(0,0,0,0.7)",
+            fontSize: 12,
+            fontWeight: "600",
+          }}
+        >
+          {item.value}
+        </Text>
+      </TouchableOpacity>
+    </Swipeable>
+  );
+
   return (
-    <View
+    <GestureHandlerRootView
       style={{
         flex: 1,
         backgroundColor: "#50C2C9",
         alignItems: "center",
       }}
     >
-      <View
-        style={{
-          borderRadius: 100,
-          backgroundColor: "pink",
-          marginTop: 90,
-          width: 100,
-          height: 100,
-        }}
-      />
+      <TouchableOpacity onPress={pickImage}>
+        {image ? (
+          <Image
+            source={{ uri: image }}
+            style={{
+              borderRadius: 100,
+              backgroundColor: "pink",
+              marginTop: 90,
+              width: 100,
+              height: 100,
+            }}
+          />
+        ) : (
+          <View
+            style={{
+              borderRadius: 100,
+              backgroundColor: "pink",
+              marginTop: 90,
+              width: 100,
+              height: 100,
+            }}
+          />
+        )}
+      </TouchableOpacity>
       <Text
         style={{
           fontSize: 18,
@@ -72,17 +181,26 @@ const SecondScr = () => {
         <Text style={{ fontWeight: "700", fontSize: 12, textAlign: "right" }}>
           {getCurrentTimeOfDay()}
         </Text>
-
         <View
           style={{
             width: 120,
             height: 120,
-            backgroundColor: "black",
-            borderRadius: 100,
-            marginTop: 5,
             alignSelf: "center",
+            position: "relative",
           }}
-        />
+        >
+          <View
+            style={{
+              width: 120,
+              height: 120,
+              position: "absolute",
+              top: -70,
+              left: -30,
+            }}
+          >
+            <Clock theme={ClockThemes.Default} scale={0.4} />
+          </View>
+        </View>
 
         <Text style={{ fontWeight: "700", fontSize: 14 }}>Task list</Text>
 
@@ -105,9 +223,11 @@ const SecondScr = () => {
                 fontWeight: "700",
                 paddingRight: 35,
               }}
+              value={currentExpression}
               placeholder="Daily Task"
+              onChangeText={setCurrentExpression}
             />
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handleAddExpression}>
               <Entypo
                 name="plus"
                 size={30}
@@ -116,33 +236,28 @@ const SecondScr = () => {
               />
             </TouchableOpacity>
           </View>
-          <ScrollView style={{ marginTop: 50 }}>
-            <TouchableOpacity
-              style={{ flexDirection: "row", alignItems: "center", gap: 9 }}
+          {expressions.length > 0 ? (
+            <FlatList
+              data={expressions}
+              renderItem={renderItem}
+              contentContainerStyle={{ gap: 6 }}
+              style={{ marginTop: 10 }}
+            />
+          ) : (
+            <Text
+              style={{
+                fontSize: 16,
+                marginTop: 15,
+                textAlign: "center",
+                fontWeight: "500",
+              }}
             >
-              <View
-                style={{
-                  width: 17,
-                  aspectRatio: 1,
-                  borderWidth: 2,
-                  borderColor: "black",
-                  backgroundColor: true ? "#50C2C9" : "white",
-                }}
-              />
-              <Text
-                style={{
-                  color: "rgba(0,0,0,0.7)",
-                  fontSize: 12,
-                  fontWeight: "600",
-                }}
-              >
-                Learning Programming by 12PM
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
+              Enter your first note!
+            </Text>
+          )}
         </View>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 };
 

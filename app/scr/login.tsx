@@ -8,10 +8,13 @@ import DoubleCircles from "../../components/DoubleCircles";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { Image } from "expo-image";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const scheme = z.object({
-  email: z.string().min(2, "enter value").email(),
-  password: z.string().min(1, "enter value"),
+  email: z
+    .string({ required_error: "Enter email" })
+    .email({ message: "Incorrect email" }),
+  password: z.string().min(8, "Password must contain 8 characters"),
 });
 
 const SecondScr = () => {
@@ -26,7 +29,7 @@ const SecondScr = () => {
   } = useForm<z.infer<typeof scheme>>({
     mode: "onChange",
     reValidateMode: "onChange",
-    // resolver: zodResolver(scheme),
+    resolver: zodResolver(scheme),
     defaultValues: {
       email: "",
       password: "",
@@ -64,13 +67,19 @@ const SecondScr = () => {
         <BaseInput
           placeholder="Enter your Email"
           value={watch("email")}
-          onChangeText={(value) => setValue("email", value)}
+          onChangeText={(value) =>
+            setValue("email", value, { shouldValidate: true })
+          }
+          error={errors.email?.message}
         />
         <BaseInput
           secureTextEntry
           placeholder="Enter Password"
           value={watch("password")}
-          onChangeText={(value) => setValue("password", value)}
+          onChangeText={(value) =>
+            setValue("password", value, { shouldValidate: true })
+          }
+          error={errors.password?.message}
         />
       </View>
       <TouchableOpacity onPress={() => link.back()}>
@@ -88,7 +97,7 @@ const SecondScr = () => {
         title={"Login"}
         onPress={() => {
           handleSubmit((data) => {
-            link.push(`/scr/login`);
+            link.push(`/scr/main`);
           })();
         }}
       />
@@ -101,7 +110,11 @@ const SecondScr = () => {
         }}
       >
         <Text style={{ fontSize: 18 }}>Don’t have an account? </Text>
-        <TouchableOpacity onPress={() => link.push(`/scr/main`)}>
+        <TouchableOpacity
+          onPress={() => {
+            link.push(`/scr/main`);
+          }}
+        >
           <Text
             style={{
               color: "#50C2C9",

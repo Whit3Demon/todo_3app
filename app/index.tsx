@@ -1,11 +1,10 @@
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BaseButton from "../components/BaseButton";
 import DoubleCircles from "../components/DoubleCircles";
 import { Image } from "expo-image";
-import BaseInput from "../components/BaseInput";
 
 const ScreenStart = () => {
   const link = useRouter();

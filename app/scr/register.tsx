@@ -10,7 +10,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const scheme = z.object({
-  name: z.string().min(1, "я ошибка имени"),
+  name: z
+    .string({ required_error: "enter name?|" })
+    .min(1, "enter name")
+    .regex(/^[а-яА-ЯёЁ]*$/, {
+      message: "имя должно содержать только русские буквы",
+    }),
   email: z.string().min(2, "enter value").email(),
   password: z.string().min(1, "пароль должен содрежать мнимум 1 символ"),
   repassword: z.string().min(1, "enter value"),
@@ -69,7 +74,7 @@ const SecondScr = () => {
           onChangeText={(value) =>
             setValue("name", value, { shouldValidate: true })
           }
-          error={!!errors.name?.message}
+          error={errors.name?.message}
         />
         <BaseInput
           placeholder="Enter your Email"
@@ -77,16 +82,17 @@ const SecondScr = () => {
           onChangeText={(value) =>
             setValue("email", value, { shouldValidate: true })
           }
-          error={!!errors.email?.message}
+          error={errors.email?.message}
         />
         <BaseInput
           secureTextEntry
+          passwordEye
           placeholder="Enter Password"
           value={watch("password")}
           onChangeText={(value) =>
             setValue("password", value, { shouldValidate: true })
           }
-          error={!!errors.password?.message}
+          error={errors.password?.message}
         />
 
         <BaseInput
